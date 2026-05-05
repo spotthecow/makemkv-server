@@ -408,14 +408,14 @@ mod tests {
     #[test]
     fn drv_visible_and_enabled() {
         assert_eq!(
-            parse(r#"DRV:0,1,1,0,"BD-RE BW-16D1HT","Hamnet""#),
+            parse(r#"DRV:0,1,1,0,"BD-RE BW-16D1HT","MyDisc""#),
             Token::Drive {
                 index: 0,
                 visible: true,
                 enabled: true,
                 flags: DiskFlags(0),
                 drive_name: "BD-RE BW-16D1HT".into(),
-                disc_name: "Hamnet".into(),
+                disc_name: "MyDisc".into(),
             }
         );
     }
@@ -471,8 +471,8 @@ mod tests {
     #[test]
     fn cinfo_no_message_code() {
         assert_eq!(
-            parse(r#"CINFO:2,0,"Hamnet""#),
-            Token::DiscAttribute { id: AttributeId::Name, code: 0, value: "Hamnet".into() }
+            parse(r#"CINFO:2,0,"MyDisc""#),
+            Token::DiscAttribute { id: AttributeId::Name, code: 0, value: "MyDisc".into() }
         );
     }
 
@@ -487,20 +487,20 @@ mod tests {
     #[test]
     fn tinfo_basic() {
         assert_eq!(
-            parse(r#"TINFO:0,2,0,"Hamnet""#),
-            Token::TitleAttribute { title_index: 0, id: AttributeId::Name, code: 0, value: "Hamnet".into() }
+            parse(r#"TINFO:0,2,0,"MyDisc""#),
+            Token::TitleAttribute { title_index: 0, id: AttributeId::Name, code: 0, value: "MyDisc".into() }
         );
     }
 
     #[test]
     fn tinfo_comma_in_value() {
         assert_eq!(
-            parse(r#"TINFO:0,30,0,"Hamnet - 20 chapter(s) , 77.2 GB""#),
+            parse(r#"TINFO:0,30,0,"MyDisc - 20 chapter(s) , 77.2 GB""#),
             Token::TitleAttribute {
                 title_index: 0,
                 id: AttributeId::TreeInfo,
                 code: 0,
-                value: "Hamnet - 20 chapter(s) , 77.2 GB".into(),
+                value: "MyDisc - 20 chapter(s) , 77.2 GB".into(),
             }
         );
     }
@@ -542,8 +542,8 @@ mod tests {
     #[test]
     fn tinfo_nonzero_title_index() {
         assert_eq!(
-            parse(r#"TINFO:5,27,0,"Hamnet_t05.mkv""#),
-            Token::TitleAttribute { title_index: 5, id: AttributeId::OutputFileName, code: 0, value: "Hamnet_t05.mkv".into() }
+            parse(r#"TINFO:5,27,0,"MyDisc_t05.mkv""#),
+            Token::TitleAttribute { title_index: 5, id: AttributeId::OutputFileName, code: 0, value: "MyDisc_t05.mkv".into() }
         );
     }
 
