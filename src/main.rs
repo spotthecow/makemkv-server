@@ -1,11 +1,9 @@
 use std::process::Stdio;
 use tokio::process::Command;
 
-use crate::parse::Token;
-use crate::reader::spawn_token_reader;
-
-pub mod parse;
-pub mod reader;
+use makemkv_server::disc::{DiscBuilder, Stream};
+use makemkv_server::parse::Token;
+use makemkv_server::reader::spawn_token_reader;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,11 +24,35 @@ async fn main() -> anyhow::Result<()> {
     let stdout = makemkv.stdout.take().expect("makemkv stdout must exist");
     let (mut rx, reader) = spawn_token_reader(stdout);
 
+    let mut builder = DiscBuilder::new();
+
     while let Some(token) = rx.recv().await {
         if let Token::Message { message, .. } = &token {
-            println!("{message}");
+            println!("[msg] {message}");
         } else {
-            println!("{token:?}");
+            builder.push(token);
+        }
+    }
+    let disc = builder.finish();
+
+    for (i, title) in disc.titles.iter().enumerate() {
+        println!("Title {i} ({})", title.duration.as_ref().unwrap());
+        for (j, stream) in title.streams.iter().enumerate() {
+            println!("\tStream {j}:");
+            match stream {
+                Stream::Video(video_stream) => {
+                    println!("\t\tVideo: {}", video_stream.codec_long.as_ref().unwrap());
+                }
+                Stream::Audio(audio_stream) => {
+                    println!("\t\tAudio: {}", audio_stream.codec_long.as_ref().unwrap());
+                }
+                Stream::Subtitle(subtitle_stream) => {
+                    println!(
+                        "\t\tSubtitle: {}",
+                        subtitle_stream.codec_long.as_ref().unwrap()
+                    );
+                }
+            }
         }
     }
 
