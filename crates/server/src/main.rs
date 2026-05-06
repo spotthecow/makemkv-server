@@ -5,7 +5,11 @@ mod routes;
 mod state;
 
 use anyhow::Result;
-use axum::{Json, Router, response::Html, routing::{get, post}};
+use axum::{
+    Json, Router,
+    response::Html,
+    routing::{get, post},
+};
 use clap::Parser;
 use config::Config;
 use state::AppState;

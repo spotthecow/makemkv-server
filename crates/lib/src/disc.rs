@@ -50,7 +50,11 @@ pub struct Title {
 /// A parsed stream from `SINFO` tokens, discriminated by its `Type` attribute code.
 /// Streams with an unrecognised type are dropped (logged in release, panicked in debug).
 #[derive(Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "type", rename_all = "lowercase"))]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Serialize),
+    serde(tag = "type", rename_all = "lowercase")
+)]
 pub enum Stream {
     Video(VideoStream),
     Audio(AudioStream),

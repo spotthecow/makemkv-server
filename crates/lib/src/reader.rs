@@ -6,9 +6,11 @@ use tokio::{
     task::JoinHandle,
 };
 
-use crate::parse::{parse_line, ParseError, Token};
+use crate::parse::{ParseError, Token, parse_line};
 
-pub fn spawn_token_reader(stdout: ChildStdout) -> (mpsc::Receiver<Token>, JoinHandle<io::Result<()>>) {
+pub fn spawn_token_reader(
+    stdout: ChildStdout,
+) -> (mpsc::Receiver<Token>, JoinHandle<io::Result<()>>) {
     let (tx, rx) = mpsc::channel(64);
     let handle = tokio::spawn(async move {
         let mut lines = BufReader::new(stdout).lines();

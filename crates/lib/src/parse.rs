@@ -71,16 +71,16 @@ pub enum AttributeId {
 impl From<u32> for AttributeId {
     fn from(n: u32) -> Self {
         match n {
-            0  => Self::Unknown,
-            1  => Self::Type,
-            2  => Self::Name,
-            3  => Self::LangCode,
-            4  => Self::LangName,
-            5  => Self::CodecId,
-            6  => Self::CodecShort,
-            7  => Self::CodecLong,
-            8  => Self::ChapterCount,
-            9  => Self::Duration,
+            0 => Self::Unknown,
+            1 => Self::Type,
+            2 => Self::Name,
+            3 => Self::LangCode,
+            4 => Self::LangName,
+            5 => Self::CodecId,
+            6 => Self::CodecShort,
+            7 => Self::CodecLong,
+            8 => Self::ChapterCount,
+            9 => Self::Duration,
             10 => Self::DiskSize,
             11 => Self::DiskSizeBytes,
             12 => Self::StreamTypeExtension,
@@ -122,7 +122,7 @@ impl From<u32> for AttributeId {
             48 => Self::OutputAudioMixDescription,
             49 => Self::Comment,
             50 => Self::OffsetSequenceId,
-            _  => Self::Other(n),
+            _ => Self::Other(n),
         }
     }
 }
@@ -131,23 +131,45 @@ impl From<u32> for AttributeId {
 pub struct MsgFlags(pub u32);
 
 impl MsgFlags {
-    pub fn is_debug(&self) -> bool { self.0 & 32 != 0 }
-    pub fn is_hidden(&self) -> bool { self.0 & 64 != 0 }
-    pub fn is_event(&self) -> bool { self.0 & 128 != 0 }
-    pub fn requires_response(&self) -> bool { self.0 & 3854 != 0 }
-    pub fn is_error(&self) -> bool { self.0 & 3854 == 516 }
-    pub fn has_url(&self) -> bool { self.0 & 131072 != 0 }
+    pub fn is_debug(&self) -> bool {
+        self.0 & 32 != 0
+    }
+    pub fn is_hidden(&self) -> bool {
+        self.0 & 64 != 0
+    }
+    pub fn is_event(&self) -> bool {
+        self.0 & 128 != 0
+    }
+    pub fn requires_response(&self) -> bool {
+        self.0 & 3854 != 0
+    }
+    pub fn is_error(&self) -> bool {
+        self.0 & 3854 == 516
+    }
+    pub fn has_url(&self) -> bool {
+        self.0 & 131072 != 0
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DiskFlags(pub u32);
 
 impl DiskFlags {
-    pub fn has_dvd(&self) -> bool { self.0 & 1 != 0 }
-    pub fn has_hdvd(&self) -> bool { self.0 & 2 != 0 }
-    pub fn has_bluray(&self) -> bool { self.0 & 4 != 0 }
-    pub fn has_aacs(&self) -> bool { self.0 & 8 != 0 }
-    pub fn has_bdsvm(&self) -> bool { self.0 & 16 != 0 }
+    pub fn has_dvd(&self) -> bool {
+        self.0 & 1 != 0
+    }
+    pub fn has_hdvd(&self) -> bool {
+        self.0 & 2 != 0
+    }
+    pub fn has_bluray(&self) -> bool {
+        self.0 & 4 != 0
+    }
+    pub fn has_aacs(&self) -> bool {
+        self.0 & 8 != 0
+    }
+    pub fn has_bdsvm(&self) -> bool {
+        self.0 & 16 != 0
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -160,9 +182,21 @@ pub enum Token {
         format: String,
         params: Vec<String>,
     },
-    ProgressCurrentTitle { code: u32, id: u32, name: String },
-    ProgressTotalTitle { code: u32, id: u32, name: String },
-    ProgressValues { current: u32, total: u32, max: u32 },
+    ProgressCurrentTitle {
+        code: u32,
+        id: u32,
+        name: String,
+    },
+    ProgressTotalTitle {
+        code: u32,
+        id: u32,
+        name: String,
+    },
+    ProgressValues {
+        current: u32,
+        total: u32,
+        max: u32,
+    },
     Drive {
         index: u32,
         visible: bool,
@@ -171,10 +205,27 @@ pub enum Token {
         drive_name: String,
         disc_name: String,
     },
-    TitleCount { count: u32 },
-    DiscAttribute { id: AttributeId, code: u32, value: String },
-    TitleAttribute { title_index: u32, id: AttributeId, code: u32, value: String },
-    StreamAttribute { title_index: u32, stream_index: u32, id: AttributeId, code: u32, value: String },
+    TitleCount {
+        count: u32,
+    },
+    DiscAttribute {
+        id: AttributeId,
+        code: u32,
+        value: String,
+    },
+    TitleAttribute {
+        title_index: u32,
+        id: AttributeId,
+        code: u32,
+        value: String,
+    },
+    StreamAttribute {
+        title_index: u32,
+        stream_index: u32,
+        id: AttributeId,
+        code: u32,
+        value: String,
+    },
 }
 
 pub struct Parser<'a> {
@@ -203,7 +254,10 @@ impl<'a> Parser<'a> {
     }
 
     pub fn string(&mut self) -> Result<String, ParseError> {
-        let s = self.rest.strip_prefix('"').ok_or(ParseError::MissingField)?;
+        let s = self
+            .rest
+            .strip_prefix('"')
+            .ok_or(ParseError::MissingField)?;
         let mut field = String::new();
         let mut chars = s.char_indices();
         let end = loop {
@@ -211,9 +265,12 @@ impl<'a> Parser<'a> {
                 None => return Err(ParseError::UnterminatedString),
                 Some((i, '"')) => break i,
                 Some((_, '\\')) => match chars.next() {
-                    Some((_, '"'))  => field.push('"'),
+                    Some((_, '"')) => field.push('"'),
                     Some((_, '\\')) => field.push('\\'),
-                    Some((_, c))    => { field.push('\\'); field.push(c); }
+                    Some((_, c)) => {
+                        field.push('\\');
+                        field.push(c);
+                    }
                     None => return Err(ParseError::UnterminatedString),
                 },
                 Some((_, c)) => field.push(c),
@@ -302,7 +359,9 @@ mod tests {
     #[test]
     fn msg_no_params() {
         assert_eq!(
-            parse(r#"MSG:5011,0,0,"Operation successfully completed","Operation successfully completed""#),
+            parse(
+                r#"MSG:5011,0,0,"Operation successfully completed","Operation successfully completed""#
+            ),
             Token::Message {
                 code: 5011,
                 flags: MsgFlags(0),
@@ -332,7 +391,9 @@ mod tests {
     #[test]
     fn msg_escaped_quotes_in_strings() {
         assert_eq!(
-            parse(r#"MSG:2010,0,1,"Optical drive \"BD-RE BU40N\" opened in OS access mode.","Optical drive \"%1\" opened in OS access mode.","BD-RE BU40N""#),
+            parse(
+                r#"MSG:2010,0,1,"Optical drive \"BD-RE BU40N\" opened in OS access mode.","Optical drive \"%1\" opened in OS access mode.","BD-RE BU40N""#
+            ),
             Token::Message {
                 code: 2010,
                 flags: MsgFlags(0),
@@ -369,7 +430,11 @@ mod tests {
     fn prgc_basic() {
         assert_eq!(
             parse(r#"PRGC:5055,0,"Saving to MKV file""#),
-            Token::ProgressCurrentTitle { code: 5055, id: 0, name: "Saving to MKV file".into() }
+            Token::ProgressCurrentTitle {
+                code: 5055,
+                id: 0,
+                name: "Saving to MKV file".into()
+            }
         );
     }
 
@@ -377,7 +442,11 @@ mod tests {
     fn prgt_basic() {
         assert_eq!(
             parse(r#"PRGT:5056,1,"Saving title 1 of 6""#),
-            Token::ProgressTotalTitle { code: 5056, id: 1, name: "Saving title 1 of 6".into() }
+            Token::ProgressTotalTitle {
+                code: 5056,
+                id: 1,
+                name: "Saving title 1 of 6".into()
+            }
         );
     }
 
@@ -385,7 +454,11 @@ mod tests {
     fn prgv_mid_progress() {
         assert_eq!(
             parse("PRGV:1024,32768,65536"),
-            Token::ProgressValues { current: 1024, total: 32768, max: 65536 }
+            Token::ProgressValues {
+                current: 1024,
+                total: 32768,
+                max: 65536
+            }
         );
     }
 
@@ -393,7 +466,11 @@ mod tests {
     fn prgv_zero() {
         assert_eq!(
             parse("PRGV:0,0,65536"),
-            Token::ProgressValues { current: 0, total: 0, max: 65536 }
+            Token::ProgressValues {
+                current: 0,
+                total: 0,
+                max: 65536
+            }
         );
     }
 
@@ -401,7 +478,11 @@ mod tests {
     fn prgv_complete() {
         assert_eq!(
             parse("PRGV:65536,65536,65536"),
-            Token::ProgressValues { current: 65536, total: 65536, max: 65536 }
+            Token::ProgressValues {
+                current: 65536,
+                total: 65536,
+                max: 65536
+            }
         );
     }
 
@@ -464,7 +545,11 @@ mod tests {
     fn cinfo_with_message_code() {
         assert_eq!(
             parse(r#"CINFO:1,6209,"Blu-ray disc""#),
-            Token::DiscAttribute { id: AttributeId::Type, code: 6209, value: "Blu-ray disc".into() }
+            Token::DiscAttribute {
+                id: AttributeId::Type,
+                code: 6209,
+                value: "Blu-ray disc".into()
+            }
         );
     }
 
@@ -472,7 +557,11 @@ mod tests {
     fn cinfo_no_message_code() {
         assert_eq!(
             parse(r#"CINFO:2,0,"MyDisc""#),
-            Token::DiscAttribute { id: AttributeId::Name, code: 0, value: "MyDisc".into() }
+            Token::DiscAttribute {
+                id: AttributeId::Name,
+                code: 0,
+                value: "MyDisc".into()
+            }
         );
     }
 
@@ -480,7 +569,11 @@ mod tests {
     fn cinfo_html_value() {
         assert_eq!(
             parse(r#"CINFO:31,6119,"<b>Source information</b><br>""#),
-            Token::DiscAttribute { id: AttributeId::PanelTitle, code: 6119, value: "<b>Source information</b><br>".into() }
+            Token::DiscAttribute {
+                id: AttributeId::PanelTitle,
+                code: 6119,
+                value: "<b>Source information</b><br>".into()
+            }
         );
     }
 
@@ -488,7 +581,12 @@ mod tests {
     fn tinfo_basic() {
         assert_eq!(
             parse(r#"TINFO:0,2,0,"MyDisc""#),
-            Token::TitleAttribute { title_index: 0, id: AttributeId::Name, code: 0, value: "MyDisc".into() }
+            Token::TitleAttribute {
+                title_index: 0,
+                id: AttributeId::Name,
+                code: 0,
+                value: "MyDisc".into()
+            }
         );
     }
 
@@ -535,7 +633,12 @@ mod tests {
     fn tinfo_duration_with_colons() {
         assert_eq!(
             parse(r#"TINFO:0,9,0,"2:05:20""#),
-            Token::TitleAttribute { title_index: 0, id: AttributeId::Duration, code: 0, value: "2:05:20".into() }
+            Token::TitleAttribute {
+                title_index: 0,
+                id: AttributeId::Duration,
+                code: 0,
+                value: "2:05:20".into()
+            }
         );
     }
 
@@ -543,7 +646,12 @@ mod tests {
     fn tinfo_nonzero_title_index() {
         assert_eq!(
             parse(r#"TINFO:5,27,0,"MyDisc_t05.mkv""#),
-            Token::TitleAttribute { title_index: 5, id: AttributeId::OutputFileName, code: 0, value: "MyDisc_t05.mkv".into() }
+            Token::TitleAttribute {
+                title_index: 5,
+                id: AttributeId::OutputFileName,
+                code: 0,
+                value: "MyDisc_t05.mkv".into()
+            }
         );
     }
 
@@ -647,15 +755,15 @@ mod tests {
 
     #[test]
     fn attribute_id_all_sample_ids() {
-        assert_eq!(AttributeId::from(1u32),  AttributeId::Type);
-        assert_eq!(AttributeId::from(2u32),  AttributeId::Name);
-        assert_eq!(AttributeId::from(3u32),  AttributeId::LangCode);
-        assert_eq!(AttributeId::from(4u32),  AttributeId::LangName);
-        assert_eq!(AttributeId::from(5u32),  AttributeId::CodecId);
-        assert_eq!(AttributeId::from(6u32),  AttributeId::CodecShort);
-        assert_eq!(AttributeId::from(7u32),  AttributeId::CodecLong);
-        assert_eq!(AttributeId::from(8u32),  AttributeId::ChapterCount);
-        assert_eq!(AttributeId::from(9u32),  AttributeId::Duration);
+        assert_eq!(AttributeId::from(1u32), AttributeId::Type);
+        assert_eq!(AttributeId::from(2u32), AttributeId::Name);
+        assert_eq!(AttributeId::from(3u32), AttributeId::LangCode);
+        assert_eq!(AttributeId::from(4u32), AttributeId::LangName);
+        assert_eq!(AttributeId::from(5u32), AttributeId::CodecId);
+        assert_eq!(AttributeId::from(6u32), AttributeId::CodecShort);
+        assert_eq!(AttributeId::from(7u32), AttributeId::CodecLong);
+        assert_eq!(AttributeId::from(8u32), AttributeId::ChapterCount);
+        assert_eq!(AttributeId::from(9u32), AttributeId::Duration);
         assert_eq!(AttributeId::from(10u32), AttributeId::DiskSize);
         assert_eq!(AttributeId::from(11u32), AttributeId::DiskSizeBytes);
         assert_eq!(AttributeId::from(13u32), AttributeId::Bitrate);
@@ -678,36 +786,54 @@ mod tests {
         assert_eq!(AttributeId::from(33u32), AttributeId::OrderWeight);
         assert_eq!(AttributeId::from(38u32), AttributeId::MkvFlags);
         assert_eq!(AttributeId::from(39u32), AttributeId::MkvFlagsText);
-        assert_eq!(AttributeId::from(40u32), AttributeId::AudioChannelLayoutName);
+        assert_eq!(
+            AttributeId::from(40u32),
+            AttributeId::AudioChannelLayoutName
+        );
         assert_eq!(AttributeId::from(42u32), AttributeId::OutputConversionType);
     }
 
     #[test]
     fn attribute_id_full_range() {
-        assert_eq!(AttributeId::from(0u32),  AttributeId::Unknown);
+        assert_eq!(AttributeId::from(0u32), AttributeId::Unknown);
         assert_eq!(AttributeId::from(12u32), AttributeId::StreamTypeExtension);
         assert_eq!(AttributeId::from(15u32), AttributeId::AngleInfo);
         assert_eq!(AttributeId::from(23u32), AttributeId::DateTime);
         assert_eq!(AttributeId::from(24u32), AttributeId::OriginalTitleId);
         assert_eq!(AttributeId::from(34u32), AttributeId::OutputFormat);
-        assert_eq!(AttributeId::from(35u32), AttributeId::OutputFormatDescription);
+        assert_eq!(
+            AttributeId::from(35u32),
+            AttributeId::OutputFormatDescription
+        );
         assert_eq!(AttributeId::from(36u32), AttributeId::SeamlessInfo);
         assert_eq!(AttributeId::from(37u32), AttributeId::PanelText);
         assert_eq!(AttributeId::from(41u32), AttributeId::OutputCodecShort);
         assert_eq!(AttributeId::from(43u32), AttributeId::OutputAudioSampleRate);
         assert_eq!(AttributeId::from(44u32), AttributeId::OutputAudioSampleSize);
-        assert_eq!(AttributeId::from(45u32), AttributeId::OutputAudioChannelsCount);
-        assert_eq!(AttributeId::from(46u32), AttributeId::OutputAudioChannelLayoutName);
-        assert_eq!(AttributeId::from(47u32), AttributeId::OutputAudioChannelLayout);
-        assert_eq!(AttributeId::from(48u32), AttributeId::OutputAudioMixDescription);
+        assert_eq!(
+            AttributeId::from(45u32),
+            AttributeId::OutputAudioChannelsCount
+        );
+        assert_eq!(
+            AttributeId::from(46u32),
+            AttributeId::OutputAudioChannelLayoutName
+        );
+        assert_eq!(
+            AttributeId::from(47u32),
+            AttributeId::OutputAudioChannelLayout
+        );
+        assert_eq!(
+            AttributeId::from(48u32),
+            AttributeId::OutputAudioMixDescription
+        );
         assert_eq!(AttributeId::from(49u32), AttributeId::Comment);
         assert_eq!(AttributeId::from(50u32), AttributeId::OffsetSequenceId);
     }
 
     #[test]
     fn attribute_id_other() {
-        assert_eq!(AttributeId::from(51u32),    AttributeId::Other(51));
-        assert_eq!(AttributeId::from(255u32),   AttributeId::Other(255));
+        assert_eq!(AttributeId::from(51u32), AttributeId::Other(51));
+        assert_eq!(AttributeId::from(255u32), AttributeId::Other(255));
         assert_eq!(AttributeId::from(u32::MAX), AttributeId::Other(u32::MAX));
     }
 
@@ -819,12 +945,18 @@ mod tests {
 
     #[test]
     fn error_no_colon() {
-        assert!(matches!(parse_line("garbage").unwrap_err(), ParseError::NotAToken));
+        assert!(matches!(
+            parse_line("garbage").unwrap_err(),
+            ParseError::NotAToken
+        ));
     }
 
     #[test]
     fn error_not_a_token_usage_line() {
-        assert!(matches!(parse_line("Usage: makemkv [options]").unwrap_err(), ParseError::UnknownKind(_)));
+        assert!(matches!(
+            parse_line("Usage: makemkv [options]").unwrap_err(),
+            ParseError::UnknownKind(_)
+        ));
     }
 
     #[test]

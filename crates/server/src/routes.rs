@@ -329,7 +329,11 @@ pub async fn post_backup(State(state): State<AppState>) -> impl IntoResponse {
         bg_state.bump();
     });
 
-    (StatusCode::ACCEPTED, Json(json!({ "state": "ripping", "op": "backup" }))).into_response()
+    (
+        StatusCode::ACCEPTED,
+        Json(json!({ "state": "ripping", "op": "backup" })),
+    )
+        .into_response()
 }
 
 pub async fn post_cancel(State(state): State<AppState>) -> impl IntoResponse {
