@@ -20,6 +20,7 @@ type Attrs = HashMap<AttributeId, (u32, String)>;
 
 /// Parsed disc-level metadata from `CINFO` tokens, plus all titles on the disc.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Disc {
     pub name: Option<String>,
     pub volume_name: Option<String>,
@@ -30,6 +31,7 @@ pub struct Disc {
 
 /// Parsed title metadata from `TINFO` tokens, plus all streams in that title.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Title {
     pub name: Option<String>,
     pub chapter_count: Option<u32>,
@@ -48,6 +50,7 @@ pub struct Title {
 /// A parsed stream from `SINFO` tokens, discriminated by its `Type` attribute code.
 /// Streams with an unrecognised type are dropped (logged in release, panicked in debug).
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "type", rename_all = "lowercase"))]
 pub enum Stream {
     Video(VideoStream),
     Audio(AudioStream),
@@ -55,6 +58,7 @@ pub enum Stream {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct VideoStream {
     pub codec_id: Option<String>,
     pub codec_short: Option<String>,
@@ -69,6 +73,7 @@ pub struct VideoStream {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AudioStream {
     pub name: Option<String>,
     pub lang_code: Option<String>,
@@ -87,6 +92,7 @@ pub struct AudioStream {
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct SubtitleStream {
     pub lang_code: Option<String>,
     pub lang_name: Option<String>,

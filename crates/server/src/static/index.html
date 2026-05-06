@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MakeMKV</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body, h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
+ul { list-style: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+:root {
+  --bg: #f4f0e8;
+  --surface: #fffefb;
+  --surface-2: #faf6ec;
+  --border: #e1dccf;
+  --border-strong: #c5bfaf;
+  --text: #1d1f27;
+  --text-muted: #6e6f78;
+  --accent: #ee5a36;
+  --accent-hover: #d94920;
+  --accent-soft: #fde2d4;
+  --accent-text: #b03b1d;
+  --success: #2ea33f;
+  --success-soft: #dcecdf;
+  --warning: #c89000;
+  --warning-soft: #f5ead0;
+  --danger: #c83030;
+  --danger-soft: #f5dbdb;
+  --info: #2864c0;
+  --info-soft: #d9e3f3;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.02);
+  --radius: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1d1f27;
+    --surface: #262932;
+    --surface-2: #2c2f38;
+    --border: #353844;
+    --border-strong: #50546a;
+    --text: #f4f0e8;
+    --text-muted: #9d9eaa;
+    --accent: #ff7048;
+    --accent-hover: #ff8967;
+    --accent-soft: #3a2521;
+    --accent-text: #ffa483;
+    --success: #4ec062;
+    --success-soft: #213024;
+    --warning: #e5b846;
+    --warning-soft: #312814;
+    --danger: #ec5454;
+    --danger-soft: #361e1e;
+    --info: #5e95e2;
+    --info-soft: #1d2734;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.brand {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+.brand .dot { color: var(--accent); }
+.header .grow { flex: 1; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.pill::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.85;
+}
+.pill.idle     { background: var(--surface-2); color: var(--text-muted); border-color: var(--border); }
+.pill.scanning { background: var(--warning-soft); color: var(--warning); }
+.pill.scanned  { background: var(--info-soft); color: var(--info); }
+.pill.ripping  { background: var(--accent-soft); color: var(--accent-text); }
+.pill.done     { background: var(--success-soft); color: var(--success); }
+.pill.failed   { background: var(--danger-soft); color: var(--danger); }
+.pill.scanning::before, .pill.ripping::before {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.25); }
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.btn {
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  transition: background 0.1s, border-color 0.1s, transform 0.05s;
+  box-shadow: var(--shadow-sm);
+}
+.btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: var(--text-muted);
+}
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.btn-danger {
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 40%, var(--border));
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+.grow { flex: 1; }
+
+.error-band {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border: 1px solid color-mix(in oklab, var(--danger) 30%, transparent);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.95rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.error-band::before { content: "✕"; font-weight: 700; }
+
+.progress-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.95rem 1.1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+.progress-card .label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.55rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.progress-card .pct {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-text);
+  font-size: 0.95rem;
+}
+.progress-track {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  height: 0.85rem;
+  overflow: hidden;
+}
+.progress-fill {
+  background-color: var(--accent);
+  background-image: linear-gradient(45deg,
+    rgba(255,255,255,0.18) 25%, transparent 25%,
+    transparent 50%, rgba(255,255,255,0.18) 50%,
+    rgba(255,255,255,0.18) 75%, transparent 75%);
+  background-size: 1.2rem 1.2rem;
+  animation: stripes 1s linear infinite;
+  height: 100%;
+  width: 0%;
+  transition: width 0.25s ease;
+}
+@keyframes stripes {
+  from { background-position: 0 0; }
+  to   { background-position: 1.2rem 0; }
+}
+.progress-card .msg {
+  margin-top: 0.55rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.files-card {
+  background: var(--success-soft);
+  border: 1px solid color-mix(in oklab, var(--success) 30%, transparent);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.5rem;
+}
+.files-card h3 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--success);
+  margin-bottom: 0.45rem;
+}
+.files-card ul li {
+  padding: 0.18rem 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.files-card ul li::before { content: "→ "; color: var(--success); margin-right: 0.2rem; }
+
+.disc-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0.5rem 0 0.85rem;
+}
+.disc-header h2 {
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+}
+.disc-header .meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.title-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.55rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.1s;
+}
+.title-card:hover { border-color: var(--border-strong); }
+.title-card[open] { border-color: var(--accent); }
+.title-card > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.7rem 1rem;
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 0.85rem;
+  align-items: center;
+}
+.title-card > summary::-webkit-details-marker { display: none; }
+.title-card .num {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+}
+.title-card .meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.title-card .chev {
+  color: var(--text-muted);
+  transition: transform 0.15s;
+  font-size: 0.7rem;
+}
+.title-card[open] .chev { transform: rotate(90deg); }
+
+.check {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  background: var(--surface);
+  transition: background 0.1s, border-color 0.1s;
+  margin: 0;
+}
+.check:hover { border-color: var(--accent); }
+.check:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.check:checked::after {
+  content: "";
+  position: absolute;
+  left: 0.27rem;
+  top: 0.06rem;
+  width: 0.32rem;
+  height: 0.6rem;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.streams {
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 0.7rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+}
+.stream-row {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.6rem;
+  align-items: center;
+  font-size: 0.86rem;
+}
+.stream-tag {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  border-radius: 4px;
+  padding: 0.12rem 0;
+}
+.stream-tag.video    { background: var(--accent-soft); color: var(--accent-text); }
+.stream-tag.audio    { background: var(--info-soft); color: var(--info); }
+.stream-tag.subtitle { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+
+.empty {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  padding: 3rem 0;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <span class="brand">Make<span class="dot">·</span>MKV</span>
+    <span class="grow"></span>
+    <span id="state-pill" class="pill idle">idle</span>
+  </header>
+
+  <div class="btn-row">
+    <button id="scan" class="btn btn-primary">Scan disc</button>
+    <button id="rip" class="btn" disabled>Rip selected</button>
+    <button id="backup" class="btn" disabled>Backup full disc</button>
+    <span class="grow"></span>
+    <button id="cancel" class="btn btn-danger" disabled>Cancel</button>
+  </div>
+
+  <div id="error" class="error-band" hidden></div>
+
+  <div id="progress-card" class="progress-card" hidden>
+    <div class="label">
+      <span id="progress-label">working…</span>
+      <span id="progress-pct" class="pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div id="progress-fill" class="progress-fill"></div>
+    </div>
+    <div id="progress-msg" class="msg"></div>
+  </div>
+
+  <div id="files-card" class="files-card" hidden>
+    <h3>Output</h3>
+    <ul id="files"></ul>
+  </div>
+
+  <div id="disc"></div>
+  <div id="empty" class="empty">Insert a disc and press Scan.</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let lastDiscJson = null;
+
+const statePill = $("state-pill");
+const errorBand = $("error");
+const filesCard = $("files-card");
+const filesList = $("files");
+const discBox = $("disc");
+const emptyBox = $("empty");
+const progressCard = $("progress-card");
+const progressLabel = $("progress-label");
+const progressPct = $("progress-pct");
+const progressFill = $("progress-fill");
+const progressMsg = $("progress-msg");
+
+const scanBtn = $("scan");
+const ripBtn = $("rip");
+const backupBtn = $("backup");
+const cancelBtn = $("cancel");
+
+scanBtn.onclick = () => postJson("/api/disc/scan");
+cancelBtn.onclick = () => postJson("/api/cancel");
+backupBtn.onclick = () => postJson("/api/backup");
+ripBtn.onclick = () => {
+  const titles = [...document.querySelectorAll("input.check:checked")].map((el) => ({
+    index: parseInt(el.dataset.index, 10),
+  }));
+  if (titles.length === 0) return;
+  postJson("/api/rip", { titles });
+};
+
+async function postJson(url, body) {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: body ? { "Content-Type": "application/json" } : {},
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      showError(`${res.status} — ${parseErr(text)}`);
+    } else {
+      hideError();
+    }
+  } catch (e) {
+    showError(`${url}: ${e}`);
+  }
+}
+
+function parseErr(text) {
+  try { return JSON.parse(text).error || text; } catch { return text; }
+}
+
+function showError(msg) { errorBand.textContent = msg; errorBand.hidden = false; }
+function hideError() { errorBand.textContent = ""; errorBand.hidden = true; }
+
+async function loadDisc() {
+  const res = await fetch("/api/disc");
+  if (!res.ok) {
+    discBox.innerHTML = "";
+    lastDiscJson = null;
+    return;
+  }
+  const { disc } = await res.json();
+  const json = JSON.stringify(disc);
+  if (json === lastDiscJson) return;
+  lastDiscJson = json;
+  renderDisc(disc);
+}
+
+function renderDisc(disc) {
+  if (!disc || !disc.titles || disc.titles.length === 0) {
+    discBox.innerHTML = "";
+    return;
+  }
+  const flagsLabel = disc.titles.length === 1 ? "1 title" : `${disc.titles.length} titles`;
+  const head = `
+    <div class="disc-header">
+      <h2>${escapeHtml(disc.name || "Unnamed")}</h2>
+      <span class="meta">${escapeHtml(disc.volume_name || "")}${disc.volume_name ? " · " : ""}${flagsLabel}</span>
+    </div>`;
+  const cards = disc.titles.map((t, i) => titleCardHtml(t, i)).join("");
+  discBox.innerHTML = head + cards;
+  document.querySelectorAll("input.check").forEach((el) => {
+    el.addEventListener("change", updateRipButton);
+    el.addEventListener("click", (e) => e.stopPropagation());
+  });
+  updateRipButton();
+}
+
+function titleCardHtml(t, i) {
+  const dur = t.duration || "?";
+  const sz = t.disk_size || "?";
+  const chap = t.chapter_count != null ? `${t.chapter_count} ch` : "";
+  const meta = [dur, sz, chap].filter(Boolean).join(" · ");
+  const streams = (t.streams || []).map(streamRowHtml).join("");
+  return `
+    <details class="title-card">
+      <summary>
+        <input type="checkbox" class="check" data-index="${i}">
+        <span class="num">Title ${i}</span>
+        <span class="meta">${escapeHtml(meta)}</span>
+        <span class="chev">▶</span>
+      </summary>
+      <div class="streams">${streams}</div>
+    </details>`;
+}
+
+function streamRowHtml(s) {
+  const kind = s.type;
+  const tag = kind === "video" ? "V" : kind === "audio" ? "A" : "S";
+  let desc;
+  if (kind === "video") {
+    desc = `${s.codec_long || s.codec_short || s.codec_id || "?"} · ${s.size || "?"} @ ${s.frame_rate || "?"}`;
+  } else if (kind === "audio") {
+    const lang = s.lang_name || s.lang_code || "?";
+    const ch = s.channel_layout || (s.channel_count ? `${s.channel_count}ch` : "?");
+    desc = `${s.codec_long || s.codec_short || "?"} · ${ch} · ${lang}`;
+  } else {
+    desc = `${s.codec_long || s.codec_short || "?"} · ${s.lang_name || s.lang_code || "?"}`;
+  }
+  return `<div class="stream-row"><span class="stream-tag ${kind}">${tag}</span><span>${escapeHtml(desc)}</span></div>`;
+}
+
+function updateRipButton() {
+  const count = document.querySelectorAll("input.check:checked").length;
+  const lockedOut = ripBtn.dataset.lockedOut === "1";
+  ripBtn.disabled = count === 0 || lockedOut;
+  ripBtn.textContent = count > 0 ? `Rip selected (${count})` : "Rip selected";
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+function applyStatus(s) {
+  const state = s.state;
+  statePill.className = "pill " + state;
+  statePill.textContent = state === "ripping" && s.op === "backup" ? "backing up" : state;
+
+  const ripping = state === "ripping";
+  const busy = state === "scanning" || ripping;
+  scanBtn.disabled = busy;
+  cancelBtn.disabled = !ripping;
+  backupBtn.disabled = busy || !(state === "scanned" || state === "done");
+  ripBtn.dataset.lockedOut = busy ? "1" : "";
+  updateRipButton();
+
+  progressCard.hidden = !ripping;
+  if (ripping && s.progress) {
+    const pct = (s.progress.fraction || 0) * 100;
+    progressFill.style.width = `${pct.toFixed(1)}%`;
+    progressPct.textContent = `${Math.floor(pct)}%`;
+    if (s.op === "backup") {
+      progressLabel.textContent = "Backing up disc";
+    } else {
+      progressLabel.textContent = `Title ${s.progress.current_title} (${(s.progress.completed_titles || 0) + 1}/${s.progress.total_titles || 1})`;
+    }
+    progressMsg.textContent = s.progress.message || "";
+  }
+
+  if (state === "failed") showError(s.error || "failed");
+  else hideError();
+
+  if (state === "done" && Array.isArray(s.files)) {
+    filesCard.hidden = false;
+    filesList.innerHTML = s.files.map((f) => `<li>${escapeHtml(f)}</li>`).join("");
+  } else {
+    filesCard.hidden = true;
+    filesList.innerHTML = "";
+  }
+
+  if (state === "scanned" || state === "ripping" || state === "done") {
+    loadDisc();
+  } else {
+    discBox.innerHTML = "";
+    lastDiscJson = null;
+  }
+
+  emptyBox.hidden = state !== "idle";
+}
+
+function connect() {
+  const es = new EventSource("/api/status/stream");
+  es.onmessage = (e) => {
+    try { applyStatus(JSON.parse(e.data)); } catch (err) { console.error(err); }
+  };
+  es.onerror = () => {
+    progressMsg.textContent = "(reconnecting…)";
+  };
+}
+connect();
+</script>
+</body>
+</html>

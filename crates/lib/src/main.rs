@@ -1,9 +1,10 @@
+use lib::{
+    disc::{DiscBuilder, Stream},
+    parse::Token,
+    reader::spawn_token_reader,
+};
 use std::process::Stdio;
 use tokio::process::Command;
-
-use makemkv_server::disc::{DiscBuilder, Stream};
-use makemkv_server::parse::Token;
-use makemkv_server::reader::spawn_token_reader;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
